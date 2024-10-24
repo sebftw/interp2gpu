@@ -3,7 +3,8 @@ interp2gpu is a drop-in replacement to [interp2](https://mathworks.com/help/matl
 
 ## How to use
 Call it as `Vq = interp2gpu(V, Xq, Yq, "spline")`.  
-For an explanation of inputs, see  [https://mathworks.com/help/matlab/ref/interp2.html](https://mathworks.com/help/matlab/ref/interp2.html) from Mathworks.
+For an explanation of inputs, see  [https://mathworks.com/help/matlab/ref/interp2.html](https://mathworks.com/help/matlab/ref/interp2.html) from Mathworks.  
+An example of how to use interp2gpu is given in `example.m`.
 
 
 ## Features
