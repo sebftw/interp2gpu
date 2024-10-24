@@ -1,4 +1,4 @@
-function Vq = interp2gpu(V, Xq, Yq, method)
+function Vq = interp2gpu(V, Xq, Yq, method, extrapval)
 %INTERP2GPU interpolation for 2-D gridded gpuArray data, based on interp2.
 %
 %  [Vq] = interp2gpu(V, Xq, Yq, method) is equivalent to 
@@ -19,8 +19,14 @@ function Vq = interp2gpu(V, Xq, Yq, method)
 % vectors), and we should also verify that non-complex input works as well.
 % Version 0.5, Sebastian Kazmarek Præsius, 16 Sept., 2022.
 
+narginchk(1, 5); % allowing for an ExtrapVal
+
 if nargin < 4
     method = 'linear';
+end
+
+if nargin < 5
+    extrapval = 0;
 end
 
 % Ensure gpuArray.
@@ -28,47 +34,41 @@ V = gpuArray(V);
 Xq = gpuArray(Xq);
 Yq = gpuArray(Yq);
 
-if strcmp(method, 'nearest') || ...
-   strcmp(method, 'linear')  || ...
-   strcmp(method, 'cubic')
-    % Cases where we can just fall back to built-in interp2.
-    Vq = interp2(V, Xq, Yq, method, 0);
+if strcmpi(method, 'nearest') || ...
+   strcmpi(method, 'linear')  || ...
+   strcmpi(method, 'cubic')
+    % Cases where we can just fall back to the built-in interp2.
+    Vq = interp2(V, Xq, Yq, method, extrapval);
     return;
 end
 
-
-spline_approx = strcmp(method, 'spline_approx');
+spline_approx = strcmpi(method, 'spline_approx');
 
 if strcmp(method, 'spline') || spline_approx
     derivatives = gpuThomas2D(V, spline_approx, spline_approx);
 
-    if ~iscell(derivatives)
-        % In case the derivatives are all stored in a single matrix.
-        % We had this when we used cuBLAS.
-        interpolation2D = get_kernel('getInterpolation2D');
-        Vq = feval(interpolation2D, V, derivatives, Yq, Xq, size(V, 1), size(V, 2));
-    elseif numel(derivatives) == 3
-        % The far format: derivatives = {dVdx, dVdy, dVdxdy};
-        % TODO: Implement kernel that takes this format efficiently!
-        %       For now just split it, and use the far-split kernel.
-        derivatives = {real(derivatives{1}), imag(derivatives{1}), real(derivatives{2}), imag(derivatives{2}), real(derivatives{3}), imag(derivatives{3})};
-        interpolation2D = get_kernel('getInterpolation2D_far_split');
-        % We allow batching over all the dimensions following the two first
-        sizeV = size(V);
-        batch_size = prod(sizeV(3:ndims(V)));
-        interpolation2D.GridSize(3) = batch_size;
-        Vq = feval(interpolation2D, V, V, derivatives{1}, derivatives{2}, derivatives{3}, derivatives{4}, derivatives{5}, derivatives{6}, Yq, Xq, size(V, 1), size(V, 2));
-    else
-        % The far-split format: derivatives = {dR1, dI1, dR2, dI2, dR3, dI3}
-        % This is the path we currently use.
-        interpolation2D = get_kernel('getInterpolation2D_far_split');
+    % The fastest format for evaluation is to pack the values and
+    % derivatives into one matrix. For real-valued data, this would mean
+    % packing {V, dVdx, dVdy, dVdxdy} in one matrix of float4.
 
-        % We allow batching over all the dimensions following the two first
-        sizeV = size(V);
-        batch_size = prod(sizeV(3:ndims(V)));
-        interpolation2D.GridSize(3) = batch_size;
-        Vq = feval(interpolation2D, V, V, derivatives{1}, derivatives{2}, derivatives{3}, derivatives{4}, derivatives{5}, derivatives{6}, Yq, Xq, size(V, 1), size(V, 2));
+    if numel(derivatives) == 3
+       % The far format: derivatives = {dVdx, dVdy, dVdxdy};
+       % TODO: Implement kernel that takes this format efficiently!
+       %       For now just split it, and use the far-split kernel.
+       if isreal(V)
+           interpolation2D = get_kernel('getInterpolation2D_far_real');
+       else
+           interpolation2D = get_kernel('getInterpolation2D_far');
+       end
+    else
+        % The far-split format: derivatives = {real(dVdx), imag(dVdx), real(dVdy), imag(dVdy), real(dVdxdy), imag(dVdxdy)}
+        interpolation2D = get_kernel('getInterpolation2D_far_split');
     end
+
+    % We allow batching over all the dimensions following the two first
+    batch_size = prod(size(V, 3:ndims(V)));
+    interpolation2D.GridSize(3) = batch_size;
+    Vq = feval(interpolation2D, zeros(size(Xq), "like", V), V, derivatives{:}, size(V, 1), size(V, 2), Yq, Xq, size(Xq, 1), size(Yq, 2), extrapval);
 else
     error('Interpolation method not supported on GPU');
 end

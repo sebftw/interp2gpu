@@ -57,6 +57,16 @@ kern.ThreadBlockSize = [32 16];
 kern.GridSize = [12 D.MultiprocessorCount];
 kernel_cache('getInterpolation2D_far_split') = kern;
 
+kern = parallel.gpu.CUDAKernel('getInterpolation2D.ptx','getInterpolation2D.cu', 'getInterpolation2D_far');
+kern.ThreadBlockSize = [32 16];
+kern.GridSize = [12 D.MultiprocessorCount];
+kernel_cache('getInterpolation2D_far') = kern;
+
+kern = parallel.gpu.CUDAKernel('getInterpolation2D.ptx','getInterpolation2D.cu', 'getInterpolation2D_far_real');
+kern.ThreadBlockSize = [32 16];
+kern.GridSize = [12 D.MultiprocessorCount];
+kernel_cache('getInterpolation2D_far_real') = kern;
+
 cd(current_dir); % cd back to previous current dir.
 
 if ~isempty(kernel_name)

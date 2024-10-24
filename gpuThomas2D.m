@@ -171,6 +171,7 @@ function [prod, pre, C] = getpreandc(n)
         % points. Other cubic splines usually require at least three.
         error('Need at least four points in each dimension for spline interpolation.');
     end
+    % Compute the matrix in double precision, and then turn it to single.
     pre = eye(n, 'double');
     prediff = diff(pre, [], 1);
     pre(1, :)=((1+4)*prediff(1, :)+prediff(2, :))/2;
