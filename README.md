@@ -1,4 +1,4 @@
-# Fast Spline Interpolation using GPU Acceleration
+# Fast 2D Spline Interpolation with GPU Acceleration
 interp2gpu is a drop-in replacement to [interp2](https://mathworks.com/help/matlab/ref/interp2.html) to perform spline interpolation on the GPU in MATLAB.
 
 ## How to use
