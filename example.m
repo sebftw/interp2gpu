@@ -160,6 +160,7 @@ disp("  Speed-up factor: " + num2str(t_interp2/t_interp2gpu, 2));
 disp(' ');
 disp(" Multiple-image interpolation.");
 batch_size = 20;
+
 Xb = repmat(X, 1, 1, batch_size);
 Yb = repmat(Y, 1, 1, batch_size);
 imgb = repmat(img, 1, 1, batch_size);

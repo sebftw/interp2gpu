@@ -21,8 +21,6 @@ function Vq = interp2gpu(V, Xq, Yq, method, extrapval)
 % Version 1.0, Sebastian Kazmarek Præsius, 25 Oct., 2024.
 %  Added support for real input.
 
-narginchk(1, 5); % allowing for an ExtrapVal
-
 if nargin < 4
     method = 'linear';
 end
@@ -31,10 +29,12 @@ if nargin < 5
     extrapval = 0;
 end
 
-% Ensure gpuArray.
-V = gpuArray(V);
-Xq = gpuArray(Xq);
-Yq = gpuArray(Yq);
+if nargin >= 3
+    % Ensure it is gpuArray for GPU processing.
+    V = gpuArray(V);
+    Xq = gpuArray(Xq);
+    Yq = gpuArray(Yq);
+end
 
 if strcmpi(method, 'nearest') || ...
    strcmpi(method, 'linear')  || ...
@@ -44,9 +44,16 @@ if strcmpi(method, 'nearest') || ...
     return;
 end
 
+narginchk(1, 5); % allowing for an ExtrapVal
+assert(numel(Xq) == numel(Yq), "The inputs Xq and Yq must match in size.");
+
+Bv = prod(size(V, 3:ndims(V)+1)); Bq = prod(size(Xq, 3:ndims(Xq)+1));
+assert(ismatrix(V) || ismatrix(Xq) || Bv == Bq, "The third dimension of V and Xq must match in size, or one of them must be two-dimensional.");
+
 spline_approx = strcmpi(method, 'spline_approx');
 
 if strcmp(method, 'spline') || spline_approx
+    assert(all(size(V, 1:2) >= 4), "The input V must have at least four datapoints on each axis.");
     derivatives = gpuThomas2D(V, spline_approx, spline_approx);
 
     % The fastest format for evaluation is to pack the values and
@@ -68,11 +75,12 @@ if strcmp(method, 'spline') || spline_approx
     end
 
     % We allow batching over all the dimensions following the two first
-    batch_size = prod(size(V, 3:ndims(V)));
+    batch_size = max(Bv, Bq);
     interpolation2D.GridSize(3) = batch_size;
-    Vq = feval(interpolation2D, zeros(size(Xq), "like", V), V, derivatives{:}, size(V, 1), size(V, 2), Yq, Xq, size(Xq, 1), size(Yq, 2), extrapval);
+    interpolation2D = setGridSize(interpolation2D, size(Xq, 1:2));
+    Vq = feval(interpolation2D, zeros(size(Xq), "like", V), V, derivatives{:}, size(V, 1), size(V, 2), Yq, Xq, size(Xq, 1), size(Yq, 2), extrapval, ismatrix(Xq), ismatrix(V));
 else
-    error('Interpolation method not supported on GPU');
+    error(['Interpolation method "' method '"  not supported on GPU.']);
 end
 
 end

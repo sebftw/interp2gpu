@@ -9,11 +9,9 @@
 // #define vsub(C, X, Y)   v[(C-1)+4*(X)+4*bounds.x*(Y)+offset]
 // This will lead to faster interpolation due to better cache use, but if
 // only one interpolation is done, the speed-up is not worth it due to the
-// time to do the one-time computation:
-// derivatives = permute(derivatives, [3, 1, 2]);
+// time to do the one-time computation for reordering:
+//     derivatives = permute(derivatives, [3, 1, 2]);
 // Additionally one can then do vectorized loads, or float4 textures.
-
-#define SMALL_ANGLE 1e-6f // 1e-6f, 1.2e-7f, 1e-30
 
 template <typename Typointer, typename Ty2>
 class split_complex {
@@ -107,14 +105,24 @@ __device__ void getInterpolation2D_far_generic(Tv * __restrict__ q,
                                              Tdv dvdx,
                                              Tdv dvdy, 
                                              Tdv dvdxdy,
-                                             const int xs, const int ys, const T * __restrict__ xq, const T * __restrict__ yq, const int xs_out, const int ys_out, const Tv extrapval)  {
+                                             const int xs, const int ys, const T * __restrict__ xq, const T * __restrict__ yq, const int xs_out, const int ys_out,
+                                             const Tv extrapval, const bool broadcastXq, const bool broadcastV)  {
     // This is the function that we currently use for 2D interpolation.
     // First offset to get the page this block must work on.
     int batch_idx = blockIdx.z;
     int page = batch_idx * xs * ys;
     int page_out = batch_idx * xs_out * ys_out;
-    yq += page_out;
-    xq += page_out;
+    if(broadcastV)
+        // In this case there is only one V supplied (one page).
+        page = 0;
+    if(broadcastXq)
+        // In this case there is only one Xq/Yq supplied, but multiple V.
+        // Then it should not flip pages in xq/yq, but only in the output.
+        ;
+    else {
+        yq += page_out;
+        xq += page_out;
+    }
     q += page_out;
 
     v += page;
@@ -143,14 +151,14 @@ __global__ void getInterpolation2D_far_split(float2 * __restrict__ q,
                                              const float * __restrict__ dvdx_real, const float * __restrict__ dvdx_imag,
                                              const float * __restrict__ dvdy_real, const float * __restrict__ dvdy_imag,
                                              const float * __restrict__ dvdxdy_real, const float * __restrict__ dvdxdy_imag,
-                                             const int xs, const int ys, const float * __restrict__ xq, const float * __restrict__ yq, const int xs_out, const int ys_out, const float2 extrapval)  {
+                                             const int xs, const int ys, const float * __restrict__ xq, const float * __restrict__ yq, const int xs_out, const int ys_out, const float2 extrapval, const bool broadcastXq, const bool broadcastV)  {
     typedef float Tdv;
     typedef typename Vectypes<Tdv>::type Tvec;  // https://stackoverflow.com/a/17834484
     auto dvdx = split_complex<const Tdv * __restrict__, Tvec>(dvdx_real, dvdx_imag);
     auto dvdy = split_complex<const Tdv * __restrict__, Tvec>(dvdy_real, dvdy_imag);
     auto dvdxdy = split_complex<const Tdv * __restrict__, Tvec>(dvdxdy_real, dvdxdy_imag);
     
-    getInterpolation2D_far_generic(q, v, dvdx, dvdy, dvdxdy, xs, ys, xq, yq, xs_out, ys_out, extrapval);
+    getInterpolation2D_far_generic(q, v, dvdx, dvdy, dvdxdy, xs, ys, xq, yq, xs_out, ys_out, extrapval, broadcastXq, broadcastV);
 }
 
 // Far case (far because the derivatives are stored in separate arrays).
@@ -159,16 +167,19 @@ __global__ void getInterpolation2D_far(float2 * __restrict__ q,
                                              const float2 * __restrict__ dvdx,
                                              const float2 * __restrict__ dvdy,
                                              const float2 * __restrict__ dvdxdy,
-                                             const int xs, const int ys, const float * __restrict__ xq, const float * __restrict__ yq, const int xs_out, const int ys_out, const float2 extrapval)  {
-    getInterpolation2D_far_generic(q, v, dvdx, dvdy, dvdxdy, xs, ys, xq, yq, xs_out, ys_out, extrapval);
+                                             const int xs, const int ys, const float * __restrict__ xq, const float * __restrict__ yq, const int xs_out, const int ys_out, const float2 extrapval, const bool broadcastXq, const bool broadcastV)  {
+    getInterpolation2D_far_generic(q, v, dvdx, dvdy, dvdxdy, xs, ys, xq, yq, xs_out, ys_out, extrapval, broadcastXq, broadcastV);
 }
 
 // Real case.
 __global__ void getInterpolation2D_far_real(float * __restrict__ q,
-                                             const float * __restrict__ v,
-                                             const float * __restrict__ dvdx,
-                                             const float * __restrict__ dvdy,
-                                             const float * __restrict__ dvdxdy,
-                                             const int xs, const int ys, const float * __restrict__ xq, const float * __restrict__ yq, const int xs_out, const int ys_out, const float extrapval)  {
-    getInterpolation2D_far_generic(q, v, dvdx, dvdy, dvdxdy, xs, ys, xq, yq, xs_out, ys_out, extrapval);
+                                            const float * __restrict__ v,
+                                            const float * __restrict__ dvdx,
+                                            const float * __restrict__ dvdy,
+                                            const float * __restrict__ dvdxdy,
+                                            const int xs, const int ys,
+                                            const float * __restrict__ xq, const float * __restrict__ yq,
+                                            const int xs_out, const int ys_out,
+                                            const float extrapval, const bool broadcastXq, const bool broadcastV)  {
+    getInterpolation2D_far_generic(q, v, dvdx, dvdy, dvdxdy, xs, ys, xq, yq, xs_out, ys_out, extrapval, broadcastXq, broadcastV);
 }

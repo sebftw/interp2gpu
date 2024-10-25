@@ -47,23 +47,21 @@ end
 D = gpuDevice;
 kernel_cache = containers.Map();
 
-% This GPU has full occupancy at 48 warps per SM.
-% This means 48 * 32 * D.MultiprocessorCount = 125952 threads is needed to have full occupancy.
-threads = 128; % 128 or 256
-% With 128 threads per block, we then would like 125952/threads = 984 blocks.
+% The modern NVIDIA GPUs have full occupancy at 48 warps per SM,
+% corresponding to 12 blocks if blocks per SM if blocks have 128 threads.
 
 kern = parallel.gpu.CUDAKernel('getInterpolation2D.ptx','getInterpolation2D.cu', 'getInterpolation2D_far_split');
-kern.ThreadBlockSize = [32 16];
+kern.ThreadBlockSize = [16 8];
 kern.GridSize = [12 D.MultiprocessorCount];
 kernel_cache('getInterpolation2D_far_split') = kern;
 
 kern = parallel.gpu.CUDAKernel('getInterpolation2D.ptx','getInterpolation2D.cu', 'getInterpolation2D_far');
-kern.ThreadBlockSize = [32 16];
+kern.ThreadBlockSize = [16 8];
 kern.GridSize = [12 D.MultiprocessorCount];
 kernel_cache('getInterpolation2D_far') = kern;
 
 kern = parallel.gpu.CUDAKernel('getInterpolation2D.ptx','getInterpolation2D.cu', 'getInterpolation2D_far_real');
-kern.ThreadBlockSize = [32 16];
+kern.ThreadBlockSize = [16 8];
 kern.GridSize = [12 D.MultiprocessorCount];
 kernel_cache('getInterpolation2D_far_real') = kern;
 

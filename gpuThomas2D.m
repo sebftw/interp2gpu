@@ -1,4 +1,4 @@
-function derivatives = gpuThomas2D(V, approx_dim1, approx_dim2)
+    function derivatives = gpuThomas2D(V, approx_dim1, approx_dim2)
     %GPUTHOMAS2D Computes the derivatives for 2D spline interpolation.
     %
     % [derivatives] = GPUTHOMAS2D(V)
