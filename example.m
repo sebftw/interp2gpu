@@ -20,7 +20,7 @@ x = 1:size(img, 2);
 
 [X, Y] = meshgrid(x, y); % Create all pixel positions.
 
-% Let's try with a 30 degree rotation around the center and 1.5x zoom.
+% Let's try with a -60 degree rotation around the center and 1.5x zoom.
 theta = -60 * pi/180;
 zoom = 1.5;
 mu = [mean(x([1, end])); mean(y([1, end]))];
