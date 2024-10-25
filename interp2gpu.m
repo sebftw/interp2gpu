@@ -16,8 +16,10 @@ function Vq = interp2gpu(V, Xq, Yq, method, extrapval)
 % processing each frame individually.
 
 % TODO: We do not support all the call signatures of interp2 (e.g. Xq, Yq
-% vectors), and we should also verify that non-complex input works as well.
+% vectors). We could also add Makima.
 % Version 0.5, Sebastian Kazmarek Præsius, 16 Sept., 2022.
+% Version 1.0, Sebastian Kazmarek Præsius, 25 Oct., 2024.
+%  Added support for real input.
 
 narginchk(1, 5); % allowing for an ExtrapVal
 
