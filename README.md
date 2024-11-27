@@ -1,5 +1,5 @@
 # Fast 2D Spline Interpolation with GPU Acceleration
-__interp2gpu__ is a drop-in replacement to `interp2` to perform spline interpolation on the GPU in MATLAB.
+__interp2gpu__ is a drop-in replacement to `interp2` to perform fast spline interpolation on the GPU in MATLAB.
 
 ## How to use
 Call it as `Vq = interp2gpu(V, Xq, Yq, "spline")`.  
