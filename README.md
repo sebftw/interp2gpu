@@ -8,8 +8,8 @@ An example of how to use interp2gpu is given in `example.m`.
 
 ## Installation
 You can download the code with [this link](https://github.com/sebftw/interp2gpu/archive/refs/heads/main.zip).  
-Then run `addpath(CODEPATH)`, where CODEPATH is the path of the directory where interp2gpu is located.
-Now you can use interp2gpu!
+Then run `addpath(CODEPATH)`, where CODEPATH is the path of the directory where interp2gpu is located.  
+You can now use interp2gpu!
 
 ## Features
 :heavy_check_mark: Multiple images can be processed with one call to interp2gpu.  
