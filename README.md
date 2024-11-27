@@ -24,6 +24,7 @@ You can add support for double-precision inputs and arbitrary input pixel grids 
 - `interp2gpu.m` is the main function.
 - `gpuThomas2D.m` is used to compute the image derivatives required to evaluate the spline.
 - `get_kernel.m` is used to cache CUDA kernels, so they do not have to be loaded every time.
+- `Spline_paper.pdf` is a paper containing the theory of the method and its application in ultrasound imaging..
 - `kernels/getInterpolation2D.cu` contains the CUDA C++ source code used to evaluate the spline.
 - `kernels/compile_kernels.m` is used to compile the CUDA code.
 - `kernels/getInterpolation2D.ptx` is the compiled CUDA kernel.
