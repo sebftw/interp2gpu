@@ -4,7 +4,7 @@ __interp2gpu__ is a drop-in replacement to `interp2` to perform fast spline inte
 ## How to use
 Call it as `Vq = interp2gpu(V, Xq, Yq, "spline")`.  
 For an explanation of inputs, see  [https://mathworks.com/help/matlab/ref/interp2.html](https://mathworks.com/help/matlab/ref/interp2.html) from Mathworks.  
-An example of how to use interp2gpu is given in `example.m`.
+An example of using interp2gpu is given in [example.m](example.m).
 
 ## Installation
 You can download the code with [this link](https://github.com/sebftw/interp2gpu/archive/refs/heads/main.zip).  
