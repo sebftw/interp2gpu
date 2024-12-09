@@ -17,7 +17,7 @@ You can now use interp2gpu!
 :x: Does not currently support double-precision inputs.  
 :x: Does not currently support arbitrary input pixel grids.  
 
-You can add support for double-precision inputs and arbitrary input pixel grids fairly easily - feel free to contribute.
+You can add support for double-precision inputs and non-uniform pixel grids relatively easily - feel free to contribute.
 
 ## Files
 - `example.m` is an example that shows how to use interp2gpu.
