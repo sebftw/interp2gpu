@@ -21,7 +21,7 @@ You can add support for double-precision inputs and non-uniform pixel grids rela
 
 ## How to Cite
 If you are using this software in your research, please cite our paper:
-S. K. Præsius and J. Arendt Jensen, "Fast Spline Interpolation using GPU Acceleration," 2024 IEEE Ultrasonics, Ferroelectrics, and Frequency Control Joint Symposium (UFFC-JS), Taipei, Taiwan, 2024, pp. 1-5, doi: [10.1109/UFFC-JS60046.2024.10793976](https://doi.org/10.1109/UFFC-JS60046.2024.10793976).
+S. K. Præsius and J. A. Jensen, “Fast Spline Interpolation using GPU Acceleration,” in Proc. IEEE Ultrason. Symp., pp. 1–5, 2024, doi: [10.1109/UFFC-JS60046.2024.10793976](https://doi.org/10.1109/UFFC-JS60046.2024.10793976).
 
 ## Files
 - `example.m` is an example that shows how to use interp2gpu.
