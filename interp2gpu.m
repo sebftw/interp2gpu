@@ -77,7 +77,7 @@ if strcmp(method, 'spline') || spline_approx
     % We allow batching over all the dimensions following the two first
     batch_size = max(Bv, Bq);
     interpolation2D.GridSize(3) = batch_size;
-    interpolation2D = setGridSize(interpolation2D, size(Xq, 1:2));
+    % interpolation2D.GridSize(1:2) = ceil(size(Xq, 1:2)/interpolation2D.ThreadBlockSize(1:2));
     Vq = feval(interpolation2D, zeros(size(Xq), "like", V), V, derivatives{:}, size(V, 1), size(V, 2), Yq, Xq, size(Xq, 1), size(Yq, 2), extrapval, ismatrix(Xq), ismatrix(V));
 else
     error(['Interpolation method "' method '"  not supported on GPU.']);
